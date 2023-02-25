@@ -4,26 +4,28 @@ using UnityEngine;
 
 public class Shooter : MonoBehaviour
 {
-    private Camera mainCam;
-    private Vector3 mousePos;
+    public GameObject myPlayer;
 
-    private void Start()
+    private void FixedUpdate()
     {
-        mainCam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        Vector3 difference = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
+        difference.Normalize();
+
+        float rotationZ = Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg;
+
+        transform.rotation = Quaternion.Euler(0.0f, 0.0f, rotationZ);
+
+        if (rotationZ < -90 || rotationZ > 90)
+        {
+            if (myPlayer.transform.eulerAngles.y == 0)
+            {
+                transform.localRotation = Quaternion.Euler(180, 0, -rotationZ);
+
+            } else if (myPlayer.transform.eulerAngles.y == 180)
+            {
+                transform.localRotation = Quaternion.Euler(180, 180, -rotationZ);
+            }
+        }
     }
 
-    private void Update()
-    {
-        mousePos = mainCam.ScreenToWorldPoint(Input.mousePosition); // gets mouse position
-        Vector3 mouseForwardPoint = mousePos + (Camera.main.transform.forward * 10.0f);
-
-        Vector3 rotation = mouseForwardPoint - transform.position;
-
-        float rotZ = Mathf.Atan2(rotation.y, rotation.x) * Mathf.Rad2Deg;   // fetches rotation on z axis by taking the arctangent of
-
-        Debug.Log(rotZ);
-
-        transform.rotation = Quaternion.Euler(0, 0, rotZ);
-
-    }
 }

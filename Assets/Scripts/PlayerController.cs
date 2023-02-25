@@ -43,7 +43,7 @@ public class PlayerController : MonoBehaviour
         if (currentForm == form.parasite)
         {
             // reconfigures speeds based on build
-            walkSpeed = 8;
+            walkSpeed = 10;
             lungeHeight = 14;
             lungeDash = 14;
 
@@ -54,7 +54,7 @@ public class PlayerController : MonoBehaviour
         }
         else if (currentForm == form.gunner)
         {
-            walkSpeed = 12;
+            walkSpeed = 14;
             lungeHeight = 20;
             lungeDash = 6;
             transform.localScale = new Vector3(0.7f, 1.2f);
@@ -95,7 +95,7 @@ public class PlayerController : MonoBehaviour
     private void Lunge(Vector2 dir)
     {
         //rb.velocity = Vector2.zero;
-
+        
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.velocity += Vector2.up * lungeHeight;
 
@@ -103,6 +103,8 @@ public class PlayerController : MonoBehaviour
         if (currentForm == form.parasite)
         {
             rb.velocity += Vector2.right * playerDirection * lungeDash;
+            if (moveInputX > 0.2f || moveInputX < -0.2f)
+                rb.velocity = rb.velocity * new Vector2(0.7f, 1.0f);
             StartCoroutine(LungeWait(0.7f));
         }
 
