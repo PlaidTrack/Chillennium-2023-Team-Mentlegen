@@ -10,7 +10,8 @@ public class PlayerController : MonoBehaviour
     private SpriteRenderer rend;
     public enum form { parasite, gunner }
     public form currentForm;
-    private enum AnimState { idle, walk, lunge };
+    private enum AnimState { idle, walk, jump };
+    private AnimState moveState;
 
     [Space]
     [Header("Base Game Stats")]
@@ -26,6 +27,10 @@ public class PlayerController : MonoBehaviour
     public bool isGrounded;
     public bool isLunging = false;
 
+    [Space]
+    // animation
+    private Animator anim;
+
 
     // Start is called before the first frame update
     void Start()
@@ -34,6 +39,10 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         boxCollider2d = GetComponent<BoxCollider2D>();
         rend = GetComponent<SpriteRenderer>();
+
+        anim = GetComponent<Animator>();
+
+        moveState = AnimState.idle;
     }
 
     // Update is called once per frame
@@ -44,12 +53,12 @@ public class PlayerController : MonoBehaviour
         {
             // reconfigures speeds based on build
             walkSpeed = 10;
-            lungeHeight = 14;
-            lungeDash = 14;
+            lungeHeight = 15;
+            lungeDash = 16;
 
             // resize & recolor
-            transform.localScale = new Vector3(0.5f, 0.3f);
-            coll.bottomOffset = new Vector2(0.0f, -0.1f);
+            //transform.localScale = new Vector3(0.5f, 0.3f);
+            coll.bottomOffset = new Vector2(0.0f, -0.5f);
             rend.color = new Color(1.0f, 0.2117647f, 0.2117647f, 1.0f);
         }
         else if (currentForm == form.gunner)
@@ -57,8 +66,8 @@ public class PlayerController : MonoBehaviour
             walkSpeed = 14;
             lungeHeight = 20;
             lungeDash = 6;
-            transform.localScale = new Vector3(0.7f, 1.2f);
-            coll.bottomOffset = new Vector2(0.0f, -0.6f);
+            //transform.localScale = new Vector3(0.7f, 1.2f);
+            //coll.bottomOffset = new Vector2(0.0f, -0.6f);
             rend.color = new Color(0.0f, 0.4433962f, 0.02627836f, 1.0f);
         }
 
@@ -85,6 +94,37 @@ public class PlayerController : MonoBehaviour
             Debug.Log("jump!");
             Lunge(dir);
         }
+        
+        anim.SetInteger("State", (int)moveState);
+    }
+
+    private void FixedUpdate()
+    {
+         // flip play in case of new move input
+        if (moveInputX < 0)
+        {
+            transform.localRotation = Quaternion.Euler(0, 180, 0);
+        } else if (moveInputX > 0)
+        {
+            transform.localRotation = Quaternion.Euler(0, 0, 0);
+        }
+        /*
+        */
+
+        if (isLunging)
+        {
+            moveState = AnimState.jump;
+        } else
+        {
+            if (moveInputX != 0 && !coll.onWall) // player is moving left
+            {
+                moveState = AnimState.walk;
+            }
+            else
+            {
+                moveState = AnimState.idle;
+            }
+        }
     }
 
     private void Walk(Vector2 dir)
@@ -94,18 +134,14 @@ public class PlayerController : MonoBehaviour
 
     private void Lunge(Vector2 dir)
     {
-        //rb.velocity = Vector2.zero;
-        
-        rb.velocity = new Vector2(rb.velocity.x, 0);
-        rb.velocity += Vector2.up * lungeHeight;
-
         // boost horizontal movement and lose controls when in parasitic form
         if (currentForm == form.parasite)
         {
-            rb.velocity += Vector2.right * playerDirection * lungeDash;
-            if (moveInputX > 0.2f || moveInputX < -0.2f)
-                rb.velocity = rb.velocity * new Vector2(0.7f, 1.0f);
             StartCoroutine(LungeWait(0.7f));
+        } else
+        {
+            rb.velocity = new Vector2(rb.velocity.x, 0);
+            rb.velocity += Vector2.up * lungeHeight;
         }
 
     }
@@ -115,8 +151,16 @@ public class PlayerController : MonoBehaviour
     {
         isLunging = true;
 
-        yield return new WaitForSeconds(time);
+        yield return new WaitForSeconds(0.2f);
 
+        rb.velocity = new Vector2(rb.velocity.x, 0);
+        rb.velocity += Vector2.up * lungeHeight;
+
+        rb.velocity += Vector2.right * playerDirection * lungeDash;
+        if (moveInputX > 0.2f || moveInputX < -0.2f)
+            rb.velocity = rb.velocity * new Vector2(0.9f, 1.0f);
+
+        yield return new WaitForSeconds(time);
         isLunging = false;
     }
 }

@@ -4,28 +4,15 @@ using UnityEngine;
 
 public class Shooter : MonoBehaviour
 {
-    public GameObject myPlayer;
-
     private void FixedUpdate()
     {
-        Vector3 difference = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
-        difference.Normalize();
-
-        float rotationZ = Mathf.Atan2(difference.y, difference.x) * Mathf.Rad2Deg;
-
-        transform.rotation = Quaternion.Euler(0.0f, 0.0f, rotationZ);
-
-        if (rotationZ < -90 || rotationZ > 90)
-        {
-            if (myPlayer.transform.eulerAngles.y == 0)
-            {
-                transform.localRotation = Quaternion.Euler(180, 0, -rotationZ);
-
-            } else if (myPlayer.transform.eulerAngles.y == 180)
-            {
-                transform.localRotation = Quaternion.Euler(180, 180, -rotationZ);
-            }
-        }
+        Vector3 mouseDirection = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 direction = mouseDirection - transform.position;
+        //direction = direction - new Vector2(14.0f, 14.0f);
+        
+        Debug.Log(direction);
+        float angle = Vector2.SignedAngle(Vector2.right, direction);
+        transform.eulerAngles = new Vector3(0, 0, angle);
     }
 
 }
